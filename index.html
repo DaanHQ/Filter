@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Tracker | Compleet Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee; --primary-light: #4895ef; --secondary: #3f37c9;
+      --danger: #f72585; --success: #4cc9f0; --warning: #f8961e;
+      --light: #f8f9fa; --dark: #212529; --gray: #6c757d; --white: #ffffff;
+      --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      --transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --light: #121212; --dark: #f8f9fa; --gray: #adb5bd; --white: #1e1e1e; --card-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--light); color: var(--dark); line-height: 1.6; transition: var(--transition); }
+    .container { max-width: 1400px; margin: 2rem auto; padding: 2rem; background: var(--white); border-radius: 16px; box-shadow: var(--card-shadow); transition: var(--transition); }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    h1 { font-size: 2.2rem; font-weight:700; background: linear-gradient(90deg,var(--primary),var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stats { display:flex; gap:1rem; }
+    .stat-box { background:rgba(67,97,238,0.1); padding:0.75rem 1.25rem; border-radius:12px; font-size:0.9rem; font-weight:500; display:flex; align-items:center; gap:0.5rem; transition:var(--transition); }
+    .stat-box:hover { transform:translateY(-2px); box-shadow:var(--card-shadow); }
+    .content-wrapper { display:flex; gap:2rem; }
+    .filter-menu { flex:0 0 240px; padding:1.5rem; background:var(--white); border-radius:12px; box-shadow:var(--card-shadow); position:sticky; top:1rem; }
+    .filter-menu h2 { margin-bottom:1.5rem; font-size:1.3rem; color:var(--primary); display:flex; align-items:center; gap:0.5rem; }
+    .search-bar { position:relative; margin-bottom:1.5rem; }
+    .search-bar input { width:100%; padding:0.75rem 1rem 0.75rem 2.5rem; border:1px solid #ddd; border-radius:8px; font-size:1rem; }
+    .search-bar i { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--gray); }
+    .filter-btn { display:flex; align-items:center; justify-content:space-between; width:100%; padding:0.75rem 1rem; margin-bottom:0.5rem; border:none; border-radius:8px; background:rgba(0,0,0,0.05); cursor:pointer; font-size:0.95rem; color:var(--dark); transition:var(--transition); }
+    .filter-btn:hover { background:rgba(67,97,238,0.1); transform:translateX(4px); }
+    .filter-btn.active { background:var(--primary); color:var(--white); font-weight:500; }
+    .counter-badge { background:var(--gray); color:var(--white); border-radius:10px; padding:0.15rem 0.5rem; font-size:0.75rem; font-weight:600; }
+    .filter-btn.active .counter-badge { background:var(--white); color:var(--primary); }
+    .filter-group-title { font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--gray); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+    .website-list { flex:1; display:grid; grid-template-columns:repeat(auto-fill,minmax(400px,1fr)); gap:1.5rem; }
+    .website-card { padding:1.5rem; background:var(--white); border-radius:12px; box-shadow:var(--card-shadow); transition:var(--transition); position:relative; overflow:hidden; }
+    .website-card:hover { transform:translateY(-5px); box-shadow:0 10px 20px rgba(0,0,0,0.1); }
+    .website-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--primary); transition:var(--transition); }
+    .website-card.blacklist::before { background:var(--danger); }
+    .website-card.whitelist::before { background:var(--success); }
+    .website-card.unknown-nl::before { background:var(--warning); }
+    .website-card.unknown-world::before { background:#9d4edd; }
+    .website-info { margin-bottom:1rem; }
+    .website-url { display:flex; align-items:center; margin-bottom:0.75rem; }
+    .website-link { color:var(--primary); text-decoration:none; font-weight:600; transition:var(--transition); display:flex; align-items:center; gap:0.5rem; }
+    .website-link:hover { color:var(--primary-light); text-decoration:underline; }
+    .favicon { width:20px; height:20px; border-radius:4px; }
+    .website-actions { display:flex; gap:0.75rem; margin-top:1rem; }
+    button { padding:0.6rem 1rem; border:none; border-radius:8px; cursor:pointer; transition:var(--transition); font-size:0.85rem; font-weight:500; display:flex; align-items:center; gap:0.4rem; }
+    .block-btn { background:var(--danger); color:var(--white); }
+    .unblock-btn { background:var(--success); color:var(--white); }
+    .whitelist-btn { background:rgba(67,97,238,0.1); color:var(--primary); }
+    .whitelist-btn.active { background:var(--primary); color:var(--white); }
+    @media (max-width:1200px){ .website-list{grid-template-columns:repeat(auto-fill,minmax(350px,1fr));} }
+    @media (max-width:992px){ .content-wrapper{flex-direction:column;} .filter-menu{position:static;width:100%;} }
+    @media (max-width:768px){ .container{padding:1.5rem;margin:1rem;} header{flex-direction:column;align-items:flex-start;gap:1rem;} .stats{width:100%;justify-content:space-between;} .website-list{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-globe-europe"></i> Website Tracker</h1>
+      <div class="header-actions">
+        <div class="stats">
+          <div class="stat-box"><i class="fas fa-list"></i> Totaal: <span id="total-count">0</span></div>
+          <div class="stat-box"><i class="fas fa-ban"></i> Geblokkeerd: <span id="blocked-count">0</span></div>
+          <div class="stat-box"><i class="fas fa-check-circle"></i> Whitelist: <span id="whitelist-count">0</span></div>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <div class="filter-menu">
+        <h2><i class="fas fa-filter"></i> Filters</h2>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="search-input" placeholder="Zoek websites..."></div>
+        <div class="filter-group"><button class="filter-btn active" data-filter="all"><i class="fas fa-layer-group"></i> Alles <span class="counter-badge" id="all-count">0</span></button></div>
+        <div class="filter-group">
+          <div class="filter-group-title"><i class="fas fa-shield-alt"></i> Beveiliging</div>
+          <button class="filter-btn" data-filter="blacklist"><i class="fas fa-ban"></i> Blacklist <span class="counter-badge" id="blacklist-count-filter">0</span></button>
+          <button class="filter-btn" data-filter="whitelist"><i class="fas fa-check-circle"></i> Whitelist <span class="counter-badge" id="whitelist-filter-count">0</span></button>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-title"><i class="fas fa-flag"></i> Categorieën</div>
+          <button class="filter-btn" data-filter="unknown-nl"><i class="fas fa-water"></i> Unknown NL <span class="counter-badge" id="unknown-nl-count">0</span></button>
+          <button class="filter-btn" data-filter="unknown-world"><i class="fas fa-globe"></i> Unknown World <span class="counter-badge" id="unknown-world-count">0</span></button>
+        </div>
+      </div>
+      <div class="website-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const websites = [
+      { url: 'https://www.google.com', name: 'Google', category: 'whitelist' },
+      { url: 'https://www.facebook.com', name: 'Facebook', category: 'blacklist' },
+      { url: 'https://www.nu.nl', name: 'NU.nl', category: 'unknown-nl' },
+      { url: 'https://www.reddit.com', name: 'Reddit', category: 'unknown-world' },
+      { url: 'https://www.bol.com', name: 'Bol.com', category: 'whitelist' },
+      { url: 'https://www.tiktok.com', name: 'TikTok', category: 'blacklist' },
+      { url: 'https://www.microsoft.com', name: 'Microsoft', category: 'whitelist' },
+      { url: 'https://www.yomama.com', name: 'YoMama', category: 'unknown-world' },
+      { url: 'https://www.rtlnieuws.nl', name: 'RTL Nieuws', category: 'unknown-nl' },
+      { url: 'https://www.xvideos.com', name: 'XVideos', category: 'blacklist' },
+      { url: 'https://www.ibm.com', name: 'IBM', category: 'whitelist' },
+      { url: 'https://www.startpagina.nl', name: 'Startpagina', category: 'unknown-nl' },
+      { url: 'https://www.stackoverflow.com', name: 'StackOverflow', category: 'whitelist' },
+      { url: 'https://www.wikipedia.org', name: 'Wikipedia', category: 'whitelist' },
+      { url: 'https://www.instagram.com', name: 'Instagram', category: 'unknown-world' },
+      { url: 'https://www.foxnews.com', name: 'Fox News', category: 'unknown-world' },
+      { url: 'https://www.speurders.nl', name: 'Speurders', category: 'unknown-nl' }
+    ];
+    const websiteList = document.querySelector('.website-list');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const searchInput = document.getElementById('search-input');
+    const counters = {
+      total: document.getElementById('total-count'),
+      blocked: document.getElementById('blocked-count'),
+      whitelist: document.getElementById('whitelist-count'),
+      all: document.getElementById('all-count'),
+      blacklistFilter: document.getElementById('blacklist-count-filter'),
+      whitelistFilter: document.getElementById('whitelist-filter-count'),
+      unknownNl: document.getElementById('unknown-nl-count'),
+      unknownWorld: document.getElementById('unknown-world-count'),
+    };
+    function updateCounters() {
+      const cats = { blacklist:0, whitelist:0, 'unknown-nl':0, 'unknown-world':0 };
+      websites.forEach(w=>cats[w.category]++);
+      counters.total.textContent=websites.length;
+      counters.blocked.textContent=cats.blacklist;
+      counters.whitelist.textContent=cats.whitelist;
+      counters.all.textContent=websites.length;
+      counters.blacklistFilter.textContent=cats.blacklist;
+      counters.whitelistFilter.textContent=cats.whitelist;
+      counters.unknownNl.textContent=cats['unknown-nl'];
+      counters.unknownWorld.textContent=cats['unknown-world'];
+    }
+    let currentFilter='all';
+    function render(filter = currentFilter, search = searchInput.value.toLowerCase()) {
+      websiteList.innerHTML = '';
+      const data = websites.filter(w =>
+        (filter==='all' || w.category===filter) &&
+        (w.name.toLowerCase().includes(search) || w.url.toLowerCase().includes(search))
+      );
+      data.forEach(w=>{
+        const card = document.createElement('div');
+        card.className=`website-card ${w.category}`;
+        card.innerHTML = `
+          <div class="website-info">
+            <div class="website-url">
+              <a class="website-link" href="${w.url}" target="_blank">
+                <img class="favicon" src="https://www.google.com/s2/favicons?domain=${w.url}" alt="">
+                ${w.name}
+              </a>
+            </div>
+            <div class="website-stats"><div class="stat-item"><i class="fas fa-globe"></i> ${w.url}</div></div>
+            <div class="website-actions">
+              <button class="block-btn">Block</button>
+              <button class="unblock-btn">Unblock</button>
+              <button class="whitelist-btn">Whitelist</button>
+            </div>
+          </div>`;
+        websiteList.appendChild(card);
+        const [blockBtn, unblockBtn, whitelistBtn] = card.querySelectorAll('button');
+        blockBtn.onclick = ()=> changeCategory(w,'blacklist');
+        unblockBtn.onclick = ()=> changeCategory(w,'unknown-world');
+        whitelistBtn.onclick = ()=> changeCategory(w,'whitelist');
+      });
+    }
+    function changeCategory(site,newCat) {
+      site.category=newCat; updateCounters(); render();
+    }
+    filterBtns.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        filterBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter=btn.dataset.filter;
+        render();
+      });
+    });
+    searchInput.addEventListener('input',()=> render());
+    // initial
+    updateCounters();
+    render();
+  </script>
+</body>
+</html>
